@@ -16,9 +16,6 @@ onMounted(() => {
     if (user) {
       console.log("login");
       isLoggedIn.value = true;
-      console.log(user.uid);
-      console.log(user.email);
-      console.log(user.displayName);
     } else {
       console.log("logout");
       isLoggedIn.value = false;
