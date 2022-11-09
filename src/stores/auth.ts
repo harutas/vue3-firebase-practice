@@ -7,6 +7,7 @@ import { async } from "@firebase/util";
 const useAuthStore = defineStore("auth", {
   state: () => ({
     isLoggedIn: false,
+    uid: "",
     name: "",
     email: "",
     password: "",
@@ -30,6 +31,7 @@ const useAuthStore = defineStore("auth", {
           console.log(error.message);
         });
         this.setInitializeUser(user);
+        this.setUser(user);
       });
     },
     // 既存のユーザーにサインインする
@@ -38,6 +40,7 @@ const useAuthStore = defineStore("auth", {
         .then((userCredential) => {
           // SignIn
           const user = userCredential.user;
+          this.setUser(user);
           this.loginEmail = "";
           this.loginPassword = "";
         })
@@ -49,6 +52,7 @@ const useAuthStore = defineStore("auth", {
     // ログアウトする
     logOut() {
       auth.signOut();
+      this.$reset();
     },
 
     setInitializeUser(user: User) {
@@ -65,6 +69,13 @@ const useAuthStore = defineStore("auth", {
           console.log(error.code);
           console.log(error.message);
         });
+    },
+
+    async setUser(user: User) {
+      this.name = user.displayName ?? "";
+      this.uid = user.uid;
+      // 非同期でデータをfetch
+      // await ~
     },
   },
 });
