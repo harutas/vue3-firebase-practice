@@ -1,10 +1,13 @@
 import { defineStore } from "pinia";
-import { auth } from "../firebase/config";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { auth, db } from "../firebase/config";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, User } from "firebase/auth";
+import { collection, doc, addDoc, setDoc, Timestamp } from "firebase/firestore";
+import { async } from "@firebase/util";
 
 const useAuthStore = defineStore("auth", {
   state: () => ({
     isLoggedIn: false,
+    uid: "",
     name: "",
     email: "",
     password: "",
@@ -16,23 +19,20 @@ const useAuthStore = defineStore("auth", {
     // 新規ユーザー登録
     registerUser() {
       // signin with email & password
-      createUserWithEmailAndPassword(auth, this.email, this.password)
-        .then((userCredential) => {
-          // userの中にuidやdisplaynameなどがある
-          const user = userCredential.user;
-          // ユーザーのプロファイルを更新する
-          updateProfile(user, {
-            displayName: this.name,
-            photoURL: "",
-          }).catch((error) => {
-            console.log(error.code);
-            console.log(error.message);
-          });
-        })
-        .catch((error) => {
+      createUserWithEmailAndPassword(auth, this.email, this.password).then(async (userCredential) => {
+        // userの中にuidやdisplaynameなどがある
+        const user = userCredential.user;
+        // ユーザーのプロファイルを更新する
+        await updateProfile(user, {
+          displayName: this.name,
+          photoURL: "",
+        }).catch((error) => {
           console.log(error.code);
           console.log(error.message);
         });
+        this.setInitializeUser(user);
+        this.setUser(user);
+      });
     },
     // 既存のユーザーにサインインする
     logInUser() {
@@ -40,6 +40,7 @@ const useAuthStore = defineStore("auth", {
         .then((userCredential) => {
           // SignIn
           const user = userCredential.user;
+          this.setUser(user);
           this.loginEmail = "";
           this.loginPassword = "";
         })
@@ -51,6 +52,30 @@ const useAuthStore = defineStore("auth", {
     // ログアウトする
     logOut() {
       auth.signOut();
+      this.$reset();
+    },
+
+    setInitializeUser(user: User) {
+      const userId = user.uid;
+      setDoc(doc(db, "users", userId), {
+        uid: userId,
+        name: user.displayName,
+        cleatedAt: Timestamp.now().toDate(),
+      })
+        .then(() => {
+          console.log("set user on db");
+        })
+        .catch((error) => {
+          console.log(error.code);
+          console.log(error.message);
+        });
+    },
+
+    async setUser(user: User) {
+      this.name = user.displayName ?? "";
+      this.uid = user.uid;
+      // 非同期でデータをfetch
+      // await ~
     },
   },
 });
