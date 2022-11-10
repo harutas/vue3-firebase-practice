@@ -1,15 +1,15 @@
 import { defineStore, storeToRefs } from "pinia";
 import { db, storage } from "../firebase/config";
 import { doc, setDoc, Timestamp, getDoc } from "firebase/firestore";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { UpLoadedImages } from "../types/index";
+import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
+import { UpLoadedImage } from "../types/index";
 import useAuthStore from "./auth";
 import { nanoid } from "nanoid";
-import _ from "lodash";
 
 const useImageStore = defineStore("image", {
   state: () => ({
-    uploadedImages: [] as UpLoadedImages[],
+    isLoadingImages: true,
+    uploadedImages: [] as UpLoadedImage[],
   }),
 
   actions: {
@@ -107,9 +107,8 @@ const useImageStore = defineStore("image", {
       try {
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-          console.log("Document data:", docSnap.data());
           // set image data
-          const images: UpLoadedImages[] | undefined = docSnap.data().images;
+          const images: UpLoadedImage[] | undefined = docSnap.data().images;
           if (images === undefined) return;
 
           const sortedImages = images.sort((a, b) => {
@@ -120,6 +119,7 @@ const useImageStore = defineStore("image", {
             } else return 0;
           });
           this.uploadedImages = sortedImages;
+          this.isLoadingImages = false;
         } else {
           // doc.data() will be undefined in this case
           console.log("No such document!");
@@ -150,6 +150,25 @@ const useImageStore = defineStore("image", {
       //       });
       //     });
       //   })
+    },
+
+    async deleteImage(image: UpLoadedImage) {
+      const imageId = image.id;
+      // クライアントで削除
+      this.uploadedImages = this.uploadedImages.filter((i) => i.id !== imageId);
+      // firestore上で削除
+      await setDoc(doc(db, "user-images", image.userUid), {
+        images: this.uploadedImages,
+      });
+      // Storage上で削除
+      const deletedRef = ref(storage, `image/users/${image.userUid}/${image.fileName}`);
+      await deleteObject(deletedRef)
+        .then(() => {
+          console.log("image deleted");
+        })
+        .catch((error) => {
+          console.log(error.code);
+        });
     },
   },
 });
