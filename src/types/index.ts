@@ -1,5 +1,5 @@
 import { Timestamp } from "firebase/firestore";
-export interface UpLoadedImages {
+export interface UpLoadedImage {
   userUid: string;
   id: string;
   storageURL: string;
