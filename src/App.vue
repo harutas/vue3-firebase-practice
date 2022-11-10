@@ -8,7 +8,7 @@ import { storeToRefs } from "pinia";
 import useAuthStore from "./stores/auth";
 
 const { isLoggedIn } = storeToRefs(useAuthStore());
-const { logOut } = useAuthStore();
+const { logOut, setUser } = useAuthStore();
 
 onMounted(() => {
   // onAuthStateChanged ユーザーのログイン状態が変わるたびに呼び出されるメソッド
@@ -16,6 +16,7 @@ onMounted(() => {
     if (user) {
       console.log("login");
       isLoggedIn.value = true;
+      setUser(user);
     } else {
       console.log("logout");
       isLoggedIn.value = false;
