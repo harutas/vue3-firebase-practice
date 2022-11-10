@@ -17,7 +17,7 @@ div(class="flex justify-center")
     div(v-for="image of uploadedImages" :key="image.id" class="flex justify-center items-center")
       img(:src="image.storageURL" class="w-full h-auto")
 div(class="text-center mt-2")
-  input(type="file" class="file-input w-full max-w-xs border-slate-200" accept="jpeg, png, jpg" @input="addImageList")
+  input(type="file" class="file-input w-full max-w-xs border-slate-200" accept=".jpeg, .png, .jpg" @input="addImageList")
 </template>
 
 <style scoped></style>
