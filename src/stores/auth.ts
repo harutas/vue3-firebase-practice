@@ -1,8 +1,7 @@
 import { defineStore } from "pinia";
 import { auth, db } from "../firebase/config";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, User } from "firebase/auth";
-import { collection, doc, addDoc, setDoc, Timestamp } from "firebase/firestore";
-import { async } from "@firebase/util";
+import { doc, setDoc, Timestamp } from "firebase/firestore";
 
 const useAuthStore = defineStore("auth", {
   state: () => ({
